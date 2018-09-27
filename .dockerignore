@@ -1,0 +1,7 @@
+Dockerfile
+.git
+**/bin
+**/obj
+Jenkinsfile
+deploy/
+packages
