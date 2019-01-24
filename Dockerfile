@@ -1,4 +1,4 @@
-FROM microsoft/dotnet-framework:4.7.1-sdk-windowsservercore-1709 as build
+FROM microsoft/dotnet-framework:4.7.1-sdk as build
 WORKDIR /app
 COPY . .
 RUN nuget.exe restore Episerver.Search.sln
@@ -7,7 +7,7 @@ RUN msbuild.exe Episerver.Search.sln \
 	/p:PublishProfile=FolderProfile \
 	/p:DeployOnBuild=true
 
-FROM microsoft/aspnet:4.7.1-windowsservercore-1709
+FROM microsoft/aspnet:4.7.1
 WORKDIR /app
 RUN mkdir -p /inetpub/wwwroot/App_Data/Index
 RUN Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
