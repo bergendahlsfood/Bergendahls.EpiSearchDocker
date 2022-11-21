@@ -17,7 +17,7 @@ variables:
   dockerRegistryServiceConnection: 'd32f9265-829e-4083-98cf-d4b23563713d'
   imageRepository: 'internal-episerver-search'
   containerRegistry: 'bfoecomcontainer.azurecr.io'
-  dockerfilePath: '**/Dockerfile'
+  dockerfilePath: './Dockerfile'
   tag: '$(Build.BuildId)'
   imagePullSecret: 'bfoecomcontainer5374b94b-auth'
 
