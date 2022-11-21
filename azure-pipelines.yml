@@ -13,29 +13,84 @@ variables:
   solution: '**/*.sln'
   buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
+  # Container registry service connection established during pipeline creation
+  dockerRegistryServiceConnection: 'd32f9265-829e-4083-98cf-d4b23563713d'
+  imageRepository: 'internal-episerver-search'
+  containerRegistry: 'bfoecomcontainer.azurecr.io'
+  dockerfilePath: '**/Dockerfile'
+  tag: '$(Build.BuildId)'
+  imagePullSecret: 'bfoecomcontainer5374b94b-auth'
 
-steps:
-- task: NuGetToolInstaller@1
+  # Agent VM image name
+  vmImageName: 'windows-latest'
 
-- task: NuGetCommand@2
-  inputs:
-    command: 'restore'
-    restoreSolution: '$(solution)'
-    feedsToUse: 'config'
-    nugetConfigPath: './NuGet.config'
+stages:
+- stage: Build
+  displayName: Build stage
+  jobs:
+  - job: Build
+    displayName: Build
+    pool:
+      vmImage: $(vmImageName)
+    steps:
+    - task: NuGetToolInstaller@1
 
-- task: MSBuild@1
-  inputs:
-    solution: '$(solution)'
-    msbuildArchitecture: 'x64'
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
-    msbuildArguments: '/p:PublishProfile=FolderProfile /p:DeployOnBuild=true'
+    - task: NuGetCommand@2
+      inputs:
+        command: 'restore'
+        restoreSolution: '$(solution)'
+        feedsToUse: 'config'
+        nugetConfigPath: './NuGet.config'
 
-- task: PublishBuildArtifacts@1
-  condition: succeeded()
-  displayName: 'Publish artifact'
-  inputs:
-    PathtoPublish: '$(Build.SourcesDirectory)/publish'
-    ArtifactName: 'drop'
-    publishLocation: 'Container'
+    - task: MSBuild@1
+      inputs:
+        solution: '$(solution)'
+        msbuildArchitecture: 'x64'
+        platform: '$(buildPlatform)'
+        configuration: '$(buildConfiguration)'
+        msbuildArguments: '/p:PublishProfile=FolderProfile /p:DeployOnBuild=true'
+    
+    - task: Docker@2
+      condition: succeeded()
+      displayName: Build and push api image
+      inputs:
+        command: buildAndPush
+        repository: $(imageRepository)
+        dockerfile: $(dockerfilePath)
+        containerRegistry: $(dockerRegistryServiceConnection)
+        tags: |
+          $(tag)
+
+    - task: PublishBuildArtifacts@1
+      condition: succeeded()
+      displayName: 'Publish artifact'
+      inputs:
+        PathtoPublish: '$(Build.SourcesDirectory)/publish'
+        ArtifactName: 'drop'
+        publishLocation: 'Container'
+
+- stage: DEPLOY_PRELOADED
+  displayName: Deploy preloaded
+  condition: and(succeeded(), not(startsWith(variables['Build.SourceBranch'], 'refs/tags/')), startsWith(variables['Build.SourceBranch'], 'refs/heads/develop'))
+  dependsOn: Build
+  variables:
+    BGD_ENV: 'preloaded'
+
+  jobs:
+  - deployment: DEPLOY_PRELOADED
+    displayName: Deploy preloaded
+    condition: and(succeeded(), not(startsWith(variables['Build.SourceBranch'], 'refs/tags/')), startsWith(variables['Build.SourceBranch'], 'refs/heads/develop'))
+    pool:
+      vmImage: $(vmImageName)
+    environment: 'preloaded'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: PowerShell@2
+            inputs:
+              targetType: 'inline'
+              script: |
+                # Write your PowerShell commands here.
+                
+                Write-Host "Hello World"
