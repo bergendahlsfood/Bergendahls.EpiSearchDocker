@@ -7,7 +7,7 @@ trigger:
 - master
 
 pool:
-  vmImage: 'windows-latest'
+  vmImage: '	windows-2019'
 
 variables:
   solution: '**/*.sln'
@@ -22,7 +22,7 @@ variables:
   imagePullSecret: 'bfoecomcontainer5374b94b-auth'
 
   # Agent VM image name
-  vmImageName: 'windows-latest'
+  vmImageName: '	windows-2019'
 
 stages:
 - stage: Build
