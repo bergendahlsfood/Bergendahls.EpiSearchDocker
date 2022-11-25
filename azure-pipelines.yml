@@ -55,7 +55,7 @@ stages:
         msbuildArguments: '/p:PublishProfile=FolderProfile /p:DeployOnBuild=true'
     
     - task: Docker@2
-      condition: succeeded()
+      condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/'))
       displayName: Build and push api image
       inputs:
         command: buildAndPush
