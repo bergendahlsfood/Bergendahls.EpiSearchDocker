@@ -22,7 +22,11 @@ variables:
   imagePullSecret: 'bfoecomcontainer5374b94b-auth'
 
   # Agent VM image name
-  vmImageName: 'windows-2019'
+  vmImageName: "windows-2019"
+  projectName: "Episerver.Search"
+  websiteName: "Episerver.Search"
+  appPoolName: "Episerver.Search"
+
 
 stages:
 - stage: Build
@@ -79,18 +83,51 @@ stages:
   jobs:
   - deployment: DEPLOY_PRELOADED
     displayName: Deploy preloaded
-    condition: and(succeeded(), not(startsWith(variables['Build.SourceBranch'], 'refs/tags/')), startsWith(variables['Build.SourceBranch'], 'refs/heads/develop'))
+    condition: succeeded()
     pool:
       vmImage: $(vmImageName)
-    environment: 'preloaded'
+    environment:
+      name: "Preloaded-VM-search-3"
+      resourceType: VirtualMachine
+    variables:
+      - name: websitePhysicalPath
+        value: '%SystemDrive%\inetpub\wwwroot\$(websiteName)'
     strategy:
       runOnce:
         deploy:
           steps:
-          - task: PowerShell@2
+          - task: IISWebAppManagementOnMachineGroup@0
             inputs:
-              targetType: 'inline'
-              script: |
-                # Write your PowerShell commands here.
-                
-                Write-Host "Hello World"
+              IISDeploymentType: "IISWebsite"
+              ActionIISWebsite: "CreateOrUpdateWebsite"
+              WebsiteName: "$(websiteName)"
+              WebsitePhysicalPath: "$(websitePhysicalPath)"
+              WebsitePhysicalPathAuth: "WebsiteUserPassThrough"
+              CreateOrUpdateAppPoolForWebsite: true
+              AppPoolNameForWebsite: "$(appPoolName)"
+              DotNetVersionForWebsite: "v4.0"
+              PipeLineModeForWebsite: "Integrated"
+              AppPoolIdentityForWebsite: "ApplicationPoolIdentity"
+              AddBinding: true
+              Bindings: |
+                {
+                    bindings:[
+                        {
+                            "protocol":"http",
+                            "ipAddress":"",
+                            "hostname":"",
+                            "port":"8080",
+                            "sslThumbprint":"",
+                            "sniFlag":false
+                        }
+                    ]
+                }
+          - task: IISWebAppDeploymentOnMachineGroup@0
+            inputs:
+              WebSiteName: "$(websiteName)"
+              Package: "$(Pipeline.Workspace)/drop"
+          - task: IISWebAppManagementOnMachineGroup@0
+            inputs:
+              IISDeploymentType: "IISWebsite"
+              ActionIISWebsite: "StartWebsite"
+              StartStopWebsiteName: "$(websiteName)"
