@@ -75,7 +75,7 @@ stages:
 
 - stage: DEPLOY_PRELOADED
   displayName: Deploy preloaded
-  condition: and(succeeded(), not(startsWith(variables['Build.SourceBranch'], 'refs/tags/')), startsWith(variables['Build.SourceBranch'], 'refs/heads/develop'))
+  condition: succeeded()
   dependsOn: Build
   variables:
     BGD_ENV: 'preloaded'
