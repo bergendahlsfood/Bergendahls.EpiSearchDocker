@@ -116,7 +116,7 @@ stages:
                             "protocol":"http",
                             "ipAddress":"",
                             "hostname":"",
-                            "port":"8080",
+                            "port":"80",
                             "sslThumbprint":"",
                             "sniFlag":false
                         }
