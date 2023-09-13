@@ -8,7 +8,7 @@ RUN msbuild.exe Episerver.Search.sln \
 	/p:PublishProfile=FolderProfile \
 	/p:DeployOnBuild=true
 
-FROM mcr.microsoft.com/dotnet/framework/sdk:4.7.2-windowsservercore-ltsc2019
+FROM mcr.microsoft.com/dotnet/framework/aspnet:4.7.2-windowsservercore-ltsc2019
 WORKDIR /app
 RUN mkdir -p /inetpub/wwwroot/App_Data/Index
 RUN Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
